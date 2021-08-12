@@ -1,0 +1,114 @@
+###
+@organization = xyz
+@project = myproj
+@basic_auth = Basic user:pass
+
+
+###
+# GET LIST OF ENVIRONMENTS
+GET https://dev.azure.com/{{organization}}/{{project}}/_apis/distributedtask/environments?api-version=6.0-preview.1
+Authorization: {{basic_auth}}
+
+
+###
+# CREATE ENVIRONMENT
+POST https://dev.azure.com/{{organization}}/{{project}}/_apis/distributedtask/environments?api-version=5.0-preview
+Authorization: {{basic_auth}}
+Content-Type: application/json
+
+{
+	"description": "my new environment", 
+	"name": "MyEnv1"
+}
+
+
+###
+# GET ENVIRONMENT DETAILS
+@environment_id = 14176
+@environment_name = MyEnv1
+GET https://dev.azure.com/{{organization}}/{{project}}/_apis/distributedtask/environments/{{environment_id}}?expands=resourceReferences&api-version=6.0-preview.1
+Authorization: {{basic_auth}}
+
+
+###
+# ADD ENVIRONMENT CHECK (APPROVAL)
+@azure_group_or_user_name = mygroup1
+@azure_group_or_user_id = be82d22b-c03d-4f4b-bda4-0eca8263861d
+POST https://dev.azure.com/{{organization}}/{{project}}/_apis/pipelines/checks/configurations?api-version=5.2-preview.1
+Authorization: {{basic_auth}}
+Content-Type: application/json
+
+{
+    "type": {
+        "id": "8C5F20A7-A545-4483-9777-F762FADE0E6D",
+        "name": "Approval"
+    },
+    "settings": {
+        "approvers": [
+            {
+                "displayName": "{{azure_group_or_user_name}}",
+                "id": "{{azure_group_or_user_id}}",
+            }
+        ],
+        "executionOrder": 1,
+        "instructions": "",
+        "blockedApprovers": [],
+        "minRequiredApprovers": 0,
+        "requesterCannotBeApprover": false
+    },
+    "resource": {
+        "type": "environment",
+        "id": "{{environment_id}}",
+        "name": "{{environment_name}}"
+    },
+    "timeout": 43200
+}
+
+
+###
+# GET ENVIRONMENT CHECKS (stored under .fps.dataProviders.data['ms.vss-pipelinechecks.checks-data-provider'].checkConfigurationDataList)
+GET https://dev.azure.com/{{organization}}/{{project}}/_environments/{{environment_id}}/checks?__rt=fps&__ver=2
+Authorization: {{basic_auth}}
+
+
+###
+# DELETE AN ENVIRONMENT CHECK
+@environment_check_id = 13637
+DELETE https://dev.azure.com/{{organization}}/{{project}}/_apis/pipelines/checks/configurations/{{environment_check_id}}?api-version=5.2-preview.1
+Authorization: {{basic_auth}}
+
+
+###
+# ADD KUBERNETES SERVICE CONNECTION AS A RESOURCE IN ENVIRONMENT
+@service_connection_id = 1cc3c68b-ad46-4584-9b99-d04a852ae227
+POST https://dev.azure.com/{{organization}}/{{project}}/_apis/distributedtask/environments/{{environment_id}}/providers/kubernetes?api-version=5.0-preview
+Authorization: {{basic_auth}}
+Content-Type: application/json
+
+{
+    "name": "ResourceName",
+    "namespace": "myns1",
+    "clusterName": "https://clusterurl.com",
+    "serviceEndpointId": "{{service_connection_id}}"
+}
+
+
+###
+# GET ALL RESOURCES IN AN ENVIRONMENT (results under .resources[])
+GET https://dev.azure.com/{{organization}}/{{project}}/_apis/distributedtask/environments/{{environment_id}}?expands=resourceReferences&api-version=6.0-preview.1
+Authorization: {{basic_auth}}
+
+
+###
+# GET RESOURCE DETAILS 
+@resource_id = 10015
+@resource_type = kubernetes
+# @resource_type = virtualmachinegroups
+GET https://dev.azure.com/{{organization}}/{{project}}/_apis/distributedtask/environments/{{environment_id}}/providers/{{resource_type}}/{{resource_id}}?api-version=6.0-preview.1
+Authorization: {{basic_auth}}
+
+
+###
+# DELETE RESOURCE
+DELETE https://dev.azure.com/{{organization}}/{{project}}/_apis/distributedtask/environments/{{environment_id}}/providers/{{resource_type}}/{{resource_id}}?api-version=6.0-preview.1
+Authorization: {{basic_auth}}
