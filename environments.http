@@ -46,7 +46,6 @@ Content-Type: application/json
 
 {
     "type": {
-        "id": "8C6F20A7-A545-4486-9777-F762FAFE0D4D",
         "name": "Approval"
     },
     "settings": {
